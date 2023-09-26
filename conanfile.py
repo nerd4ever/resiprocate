@@ -88,7 +88,7 @@ class ResiprocateConan(ConanFile):
     default_options = {
         "shared": False,
         "fPIC": True,
-        "with_popt": False,
+        "with_popt": True,
         "with_ssl": True,
         "with_soci_postgresql": False,
         "with_soci_mysql": False,
@@ -172,6 +172,9 @@ class ResiprocateConan(ConanFile):
         # BUILD_RECON ----------------------------------------------------
         tc.preprocessor_definitions["BUILD_RECON"] = 1 if self.options.enable_recon else 0
         tc.variables["BUILD_RECON"] = "ON" if self.options.enable_recon else "OFF"
+        # BUILD_RECON ----------------------------------------------------
+        tc.preprocessor_definitions["USE_POPT"] = 1 if self.options.with_popt else 0
+        tc.variables["USE_POPT"] = "ON" if self.options.with_popt else "OFF"
         if self.options.enable_recon:
             tc.preprocessor_definitions["USE_SRTP"] = 1
         tc.preprocessor_definitions["BUILD_QPID_PROTON"] = 1 if self.options.enable_qpid_proton else 0

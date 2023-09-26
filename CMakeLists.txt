@@ -69,7 +69,6 @@ endif ()
 # specified on the command line, using cmake-gui or ccmake.
 option(WITH_C_ARES "Link against libc-ares (rather than rutil/dns/ares)" FALSE)
 option(WITH_SSL "Link against SSL libraries" TRUE)
-option(USE_POPT "Link against POPT libraries" FALSE)
 option(USE_SIGCOMP "Use OpenSigComp" FALSE)
 option(USE_FMT "Link against fmt library" FALSE)
 option(VERSIONED_SONAME "Include Major.Minor version in SONAME" TRUE)
@@ -309,18 +308,10 @@ else ()
    set(OPENSSL_FOUND FALSE)
 endif ()
 
-# popt
-# Debian: libpopt-dev
+
 if (USE_POPT)
-   if (USE_CONTRIB)
-      add_subdirectory(contrib/popt)
-      set(POPT_LIBRARIES popt)
-      set(POPT_INCLUDE_DIRS contrib/popt)
-   else ()
-      find_package(popt REQUIRED)
-   endif ()
-   set(HAVE_POPT_H true)
-   add_definitions(-DHAVE_POPT_H)
+   # POPT -------------------------------------------------------------
+   find_package(popt REQUIRED)
 endif ()
 
 # OpenSigComp
