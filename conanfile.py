@@ -14,6 +14,7 @@ required_conan_version = ">=2.0.0"
 
 
 class ResiprocateConan(ConanFile):
+    build_policy = "missing"
     name = "resiprocate"
     version = "1.12.0-conan"
     settings = "os", "compiler", "build_type", "arch"
@@ -71,15 +72,27 @@ class ResiprocateConan(ConanFile):
         "enable_test": False,
     }
     generators = "CMakeDeps"
-    exports_sources = "CMakeLists.txt", "src/*"
+    exports_sources = (
+        "CMakeLists.txt",
+        "src/*",
+        "config.h.cmake",
+        "rutil/*",
+        "resip/*",
+        "emacs/*",
+        "snmp/*",
+        "contrib/*",
+        "build/*",
+        "tfm/*",
+        "tools/*",
+        "p2p/*",
+        "media/*",
+        "reflow/*",
+        "reTurn/*"
+    )
 
     def source(self):
         # self.run("git clone https://github.com/resiprocate/resiprocate.git")
         self.run("git clone -b conan-recipe-feature https://github.com/nerd4ever/resiprocate.git")
-
-        with chdir("resiprocate"):
-            os.rename("CMakeLists.txt", "CMakeListsDefault.cmake")
-            shutil.copy("CMakeListsConan.cmake", "CMakeLists.txt")
 
     # url = self.conan_data["sources"][self.version]["url"]
     # get(self, url, strip_root=True)
@@ -128,8 +141,13 @@ class ResiprocateConan(ConanFile):
         tc.generate()
 
     def build(self):
+        current_dir = os.getcwd()
+        print("current dir: " + current_dir)  # Isto deve listar o diretório 'resiprocate'
+        print(os.listdir(self.source_folder))  # Isto deve listar o diretório 'resiprocate'
+        print(os.listdir(os.path.join(self.source_folder, "resiprocate")))  # Isto deve listar o CMakeLists.txt
+
         cmake = CMake(self)
-        cmake.configure(source_folder="contrib/conan")
+        cmake.configure()
         cmake.build()
 
     def package(self):

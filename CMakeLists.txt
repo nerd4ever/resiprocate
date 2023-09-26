@@ -1,34 +1,33 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build/cmake_modules")
+# EN_US =========================================================================
+# WARNING:
+# This CMakeLists.txt is based on the original CMake file but has been modified
+# to work with Conan v2. Due to these modifications, several libraries
+# supported in the original file have been disabled.
+#
+# CAUTION: This is a TEST VERSION. Using this CMake configuration with the
+# associated Conan recipe might result in failures NOT due to the library's
+# implementation itself, but because of how this CMake and the Conan recipe
+# have been organized.
+#
+# This warning may be removed in the future when this version of the CMakeLists.txt
+# and the Conan recipe are more stable, approved, and have been tested by a larger
+# number of users.
+#
+# For now, this is an EXPERIMENTAL VERSION, and we DO NOT GUARANTEE its stability.
+# Use at your own risk.
+# ================================================================================
 
-if(POLICY CMP0042)
+list(APPEND CMAKE_MODULE_PATH "build/cmake_modules")
+
+if (POLICY CMP0042)
    CMAKE_POLICY(SET CMP0042 NEW)
-endif(POLICY CMP0042)
-if(POLICY CMP0077)
+endif (POLICY CMP0042)
+if (POLICY CMP0077)
    CMAKE_POLICY(SET CMP0077 NEW)
-endif(POLICY CMP0077)
+endif (POLICY CMP0077)
 
-# FIXME - how to include suffix such as 1.13.0~alpha1 ?
-# https://cmake.org/cmake/help/latest/variable/PROJECT_VERSION.html
 project(resiprocate VERSION 1.13.0)
-
-# Warning: CMAKE_BUILD_TYPE
-#
-# Using CMAKE_BUILD_TYPE=Debug will create a build without the NDEBUG flag
-#
-# Any other CMAKE_BUILD_TYPE appears to set NDEBUG sometimes
-# Some documentation suggest that CMAKE_BUILD_TYPE=RelWithDebInfo will
-# not set the NDEBUG flag but this appears to be inconsistent.
-#
-# reSIProcate makes extensive use of assert()
-# assert() is disabled by NDEBUG
-# Application code should not rely on NDEBUG for any purpose, its only
-# purpose is for disabling assert()
-#
-# https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html#variable:CMAKE_BUILD_TYPE
-#
-
-# shared library versioning
 
 #set(SO_ABI "0.0.0")
 set(SO_RELEASE "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
@@ -37,31 +36,18 @@ include(GNUInstallDirs)
 include(Utilities)
 include(CheckStructHasMember)
 
-enable_testing()
-
-option(ENABLE_LOG_REPOSITORY_DETAILS "Log repository revision and branch" TRUE)
-if(ENABLE_LOG_REPOSITORY_DETAILS)
-   find_package(Git REQUIRED)
-   execute_process(
-      COMMAND ${GIT_EXECUTABLE} describe --match="" --always --abbrev=40 --dirty
-      OUTPUT_VARIABLE RESIPROCATE_GIT_ID
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-   execute_process(
-      COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-      OUTPUT_VARIABLE RESIPROCATE_BRANCH_NAME
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
+if (ENABLE_TEST)
+   enable_testing()
+endif ()
 
 # https://cmake.org/cmake/help/latest/module/FindThreads.html
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
-if(NOT Threads_FOUND)
-   exit()
-endif()
-if(CMAKE_USE_PTHREADS_INIT)
+
+if (CMAKE_USE_PTHREADS_INIT)
    add_definitions(-D__REENTRANT)
    add_definitions(-pthread)
-endif()
+endif ()
 
 set(REPRO_BUILD_REV ${PACKAGE_VERSION})
 set(REPRO_RELEASE_VERSION ${PACKAGE_VERSION})
@@ -70,13 +56,13 @@ set(RESIP_SIP_MSG_MAX_BYTES 10485760)
 # https://cmake.org/cmake/help/latest/module/TestBigEndian.html
 # see also
 # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_BYTE_ORDER.html
-include (TestBigEndian)
+include(TestBigEndian)
 test_big_endian(RESIP_BIG_ENDIAN)
 
 CHECK_STRUCT_HAS_MEMBER(sockaddr_in sin_len arpa/inet.h HAVE_sockaddr_in_len)
-if(HAVE_sockaddr_in_len)
+if (HAVE_sockaddr_in_len)
    add_definitions(-DHAVE_sockaddr_in_len)
-endif()
+endif ()
 
 # Top-level user-settable variables (with defaults)
 # Those can be queried from the command line using "cmake -LH" and can be
@@ -102,7 +88,6 @@ option(USE_POSTGRESQL "Link against PostgreSQL client libraries" FALSE)
 option(USE_MAXMIND_GEOIP "Link against MaxMind GeoIP libraries" FALSE)
 option(RESIP_HAVE_RADCLI "Link against radcli RADIUS client library" FALSE)
 option(USE_NETSNMP "Link against NetSNMP client libraries" FALSE)
-option(BUILD_REPRO "Build repro SIP proxy" TRUE)
 option(BUILD_DSO_PLUGINS "Build DSO plugins" TRUE)
 option(BUILD_RETURN "Build reTurn server" TRUE)
 option(BUILD_REND "Build rend" FALSE)
@@ -110,7 +95,6 @@ option(BUILD_TFM "Build TFM, requires Netxx and cppunit" FALSE)
 option(BUILD_CLICKTOCALL "Build Click to call application" FALSE)
 option(BUILD_ICHAT_GW "Build iChat gateway, requires gloox" FALSE)
 option(BUILD_TELEPATHY_CM "Build Telepathy connection manager" FALSE)
-option(BUILD_RECON "Build reCon Conversation Manager library" FALSE)
 option(USE_SRTP1 "Use srtp 1.x instead of current version" FALSE)
 option(BUILD_RECONSERVER "Build reConServer" FALSE)
 option(USE_SIPXTAPI "Link against sipXtapi" FALSE)
@@ -120,9 +104,7 @@ option(USE_LIBWEBRTC "Link against LibWebRTC" FALSE)
 option(RECON_LOCAL_HW_TESTS "Attempt to use local audio hardware in unit tests" FALSE)
 option(BUILD_P2P "Build P2P, links against S2C and SSL, unfinished" FALSE)
 option(BUILD_PYTHON "Build components requiring Python" FALSE)
-option(BUILD_QPID_PROTON "Build components requiring qpid-proton (AMQP)" TRUE)
 option(RESIP_ASSERT_SYSLOG "Log assertion failures with Syslog" TRUE)
-option(REGENERATE_MEDIA_SAMPLES "Regenerate the header files containing raw audio samples (requires sox, xxd)" TRUE)
 
 set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on bridge")
 
@@ -130,39 +112,6 @@ set(DEFAULT_BRIDGE_MAX_IN_OUTPUTS 20 CACHE STRING "recon: Maximum connections on
 # It should not be enabled for any other case.
 option(USE_NDKPORTS_HACKS "Android ndkports build: use hardcoded paths to dependencies" FALSE)
 
-#
-# Libtool / autotools is able to build both the static and shared
-# version of a library based on a single definition of the library.
-#
-# CMake is trying to support platforms like Windows that do not
-# allow both the static and shared library to share the same target
-# name.
-#
-# Therefore, with our initial CMake implementation, we only support
-# one type of build or the other.
-#
-# People who need both static and shared libraries can run the build
-# twice with alternate values of BUILD_SHARED_LIBS
-#
-# FIXME - can we replicate one of the hacks for building both static
-#         and shared?
-#       - it is a good idea to ask the CMake developers and ask the
-#         packaging system maintainers (debhelper, rpmbuild)
-#
-# Example hacks:
-#  https://stackoverflow.com/questions/2152077/is-it-possible-to-get-cmake-to-build-both-a-static-and-shared-library-at-the-sam
-#  https://github.com/baresip/rem/pull/84/files
-#
-if(WIN32)
-   set(BUILD_SHARED_LIBS_DEFAULT OFF)
-   set(USE_CONTRIB_DEFAULT ON)
-   set(USE_NUGET ON)
-else()
-   set(BUILD_SHARED_LIBS_DEFAULT ON)
-   set(USE_CONTRIB_DEFAULT OFF)
-   set(USE_NUGET OFF)
-endif()
-option(BUILD_SHARED_LIBS "Build libraries as shared" ${BUILD_SHARED_LIBS_DEFAULT})
 option(USE_CONTRIB "Use libraries from contrib folder" ${USE_CONTRIB_DEFAULT})
 
 set(CMAKE_CXX_STANDARD 11)
@@ -172,9 +121,9 @@ set(CMAKE_CXX_STANDARD 11)
 ########################
 
 function(option_def)
-   if(${ARGV0})
+   if (${ARGV0})
       add_definitions(-D${ARGV0})
-   endif()
+   endif ()
 endfunction()
 
 function(set_def)
@@ -190,24 +139,24 @@ endfunction()
 #   https://cmake.org/cmake/help/latest/prop_tgt/SOVERSION.html
 #   https://cmake.org/cmake/help/latest/prop_tgt/VERSION.html
 function(version_libname)
-   if(SO_ABI)
+   if (SO_ABI)
       set_target_properties(${ARGV0} PROPERTIES SOVERSION ${SO_ABI})
-   endif()
+   endif ()
    # This logic tries to replicate the libtool -release X.Y ...
    # but it doesn't create the same symlink that libtool creates.
    # FIXME
    # Other people have complained about the same problem, e.g.
    # https://discourse.libsdl.org/t/patches-dynamic-library-name-should-it-be-libsdl2-2-0-so-or-libsdl2-so/19400/8
-   if(VERSIONED_SONAME)
+   if (VERSIONED_SONAME)
       set_target_properties(${ARGV0} PROPERTIES OUTPUT_NAME ${ARGV0}-${SO_RELEASE})
       file(CREATE_LINK lib${ARGV0}-${SO_RELEASE}.so ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so RESULT ${ARGV0}-IGNORE SYMBOLIC)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so DESTINATION ${CMAKE_INSTALL_LIBDIR})
-   endif()
+   endif ()
 endfunction()
 
-if(NOT VERSIONED_SONAME)
+if (NOT VERSIONED_SONAME)
    set(CMAKE_PLATFORM_NO_VERSIONED_SONAME True)
-endif()
+endif ()
 
 ################################
 ### Per-program dependencies ###
@@ -216,45 +165,54 @@ endif()
 set(USE_PCRE FALSE)
 set(USE_WEBSOCKETPP FALSE)
 
-if(BUILD_REPRO)
+if (BUILD_REPRO)
+   # BERKELEY DB ------------------------------------------------------
+   find_package(libdb REQUIRED)
+   include_directories(${libdb_INCLUDE_DIRS})
+   link_libraries(${libdb_LIBS})
    set(USE_BDB TRUE)
+   # PCRE -------------------------------------------------------------
+   find_package(pcre REQUIRED)
+   include_directories(${pcre_INCLUDE_DIRS})
+   link_libraries(${pcre_LIBS})
    set(USE_PCRE TRUE)
+
+   # CAJUN ------------------------------------------------------------
+   find_package(cajun-jsonapi REQUIRED)
+   include_directories(${cajun-jsonapi_INCLUDE_DIRS})
+   link_libraries(${cajun-jsonapi_LIBS})
    set(USE_CAJUN TRUE)
-endif()
+endif ()
 
-if(BUILD_RECON)
-   set(USE_SRTP TRUE)
-endif()
-
-if(BUILD_TFM)
+if (BUILD_TFM)
    set(USE_NETXX TRUE)
    set(USE_CPPUNIT TRUE)
-endif()
+endif ()
 
-if(BUILD_RETURN)
-   set(USE_ASIO TRUE)
-   #set(USE_BOOST TRUE)  # Dependency has been replaced by C++11
-endif()
+if (BUILD_RETURN)
+   # ASIO -------------------------------------------------------------
+   find_package(asio REQUIRED)
+endif ()
 
-if(USE_KURENTO)
+if (USE_KURENTO)
    set(USE_ASIO TRUE)
    set(USE_WEBSOCKETPP TRUE)
-endif()
+endif ()
 
-if(BUILD_CLICKTOCALL)
+if (BUILD_CLICKTOCALL)
    set(USE_PCRE TRUE)
-endif()
+endif ()
 
 ####################
 ### Dependencies ###
 ####################
 
-if(NOT USE_CONTRIB)
+if (NOT USE_CONTRIB)
    find_package(PkgConfig REQUIRED)
-endif()
+endif ()
 
 # ares
-if(WITH_C_ARES)
+if (WITH_C_ARES)
    # Don't use built-in ares
    pkg_check_modules(cares libcares REQUIRED)
 
@@ -264,7 +222,7 @@ if(WITH_C_ARES)
    set(ARES_LIBRARIES ${cares_LIBRARIES})
    include_directories(${cares_INCLUDE_DIRS})
    link_directories(${cares_LIBRARY_DIRS})
-else()
+else ()
    # Use built-in ares
    set(USE_ARES true)
    add_definitions(-DUSE_ARES)
@@ -272,26 +230,26 @@ else()
    # Put the resip ares include dir before the system ones to not conflict with
    # c-ares if also present.
    include_directories(BEFORE rutil/dns/ares)
-   
-   set(ARES_LIBRARIES resipares)
-endif()
 
-if("${CMAKE_EXE_LINKER_FLAGS}" STREQUAL "/machine:x64")
+   set(ARES_LIBRARIES resipares)
+endif ()
+
+if ("${CMAKE_EXE_LINKER_FLAGS}" STREQUAL "/machine:x64")
    set(WIN_ARCH "x64")
-else()
+else ()
    set(WIN_ARCH "Win32")
-endif()
+endif ()
 
 # Download NuGet Package Manager and ensure it is in %PATH%
 # before running CMake
-if(USE_NUGET)
+if (USE_NUGET)
    find_program(NUGET_EXE NAMES nuget.exe REQUIRED)
-endif()
+endif ()
 
 function(nuget_inst)
    exec_program(${NUGET_EXE}
-      ARGS install "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
-      )
+           ARGS INSTALL "${ARGV1}" -Version ${ARGV2} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages
+   )
    set(${ARGV0}_TARGETS ${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native/${ARGV1}.targets PARENT_SCOPE)
 
    set(PKG_TOP "${CMAKE_BINARY_DIR}/packages/${ARGV1}/build/native")
@@ -308,23 +266,23 @@ function(nuget_inst)
 endfunction()
 
 # OpenSSL
-if(WITH_SSL)
-   if(USE_NUGET)
+if (WITH_SSL)
+   if (USE_NUGET)
       nuget_inst(OPENSSL "zeroc.openssl.v142" "1.1.1.2")
       message("Using ${OPENSSL_ROOT_DIR} and ${OPENSSL_LIBRARIES}")
       # this is an argument to FindOpenSSL
       # https://cmake.org/cmake/help/latest/module/FindOpenSSL.html
       set(OPENSSL_USE_STATIC_LIBS True)
-#      set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_LIBRARIES}/libcrypto.lib")
+      #      set(OPENSSL_CRYPTO_LIBRARY "${OPENSSL_LIBRARIES}/libcrypto.lib")
       set(OPENSSL_LIBRARIES
-            "${OPENSSL_LIBRARIES_DIR}/libssl.lib"
-            "${OPENSSL_LIBRARIES_DIR}/libcrypto.lib")
+              "${OPENSSL_LIBRARIES_DIR}/libssl.lib"
+              "${OPENSSL_LIBRARIES_DIR}/libcrypto.lib")
       # FIXME - check if those libraries and headers really exist
       set(OPENSSL_FOUND TRUE)
-   elseif(USE_NDKPORTS_HACKS)
-      if(NOT ANDROID_ABI)
+   elseif (USE_NDKPORTS_HACKS)
+      if (NOT ANDROID_ABI)
          message(FATAL_ERROR "ndkports hack requested but ANDROID_ABI not set")
-      endif()
+      endif ()
       #set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../../distribution)
       #set(OPENSSL_ROOT_DIR ${distribution_DIR}/openssl/${ANDROID_ABI})
       set(OPENSSL_ROOT_DIR /src/openssl/build/port/aar/prefab/modules)
@@ -333,58 +291,58 @@ if(WITH_SSL)
       set(SSL_LIBRARIES_DIR "${OPENSSL_ROOT_DIR}/ssl/libs/android.${ANDROID_ABI}")
       set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/ssl/include)
       set(OPENSSL_LIBRARIES
-            "${SSL_LIBRARIES_DIR}/libssl.so"
-            "${CRYPTO_LIBRARIES_DIR}/libcrypto.so")
+              "${SSL_LIBRARIES_DIR}/libssl.so"
+              "${CRYPTO_LIBRARIES_DIR}/libcrypto.so")
       # FIXME - check if those libraries and headers really exist
       set(OPENSSL_FOUND TRUE)
-   else()
+   else ()
       # SSL support is requested, so make it mandatory when calling find_package
       find_package(OpenSSL REQUIRED) # HINTS ${OPENSSL_LIBRARIES})
-   endif()
+   endif ()
    # Oldest OpenSSL API to target (1.1.1)
    add_compile_definitions(OPENSSL_API_COMPAT=0x10101000L)
    set_def(USE_SSL)
-else()
+else ()
    # Explicitly set OPENSSL_FOUND to false since we didn't even run
    # find_package on it. It needs to be set to false for other CMake scripts to
    # know it is not being used.
    set(OPENSSL_FOUND FALSE)
-endif()
+endif ()
 
 # popt
 # Debian: libpopt-dev
-if(USE_POPT)
-   if(USE_CONTRIB)
+if (USE_POPT)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/popt)
       set(POPT_LIBRARIES popt)
       set(POPT_INCLUDE_DIRS contrib/popt)
-   else()
+   else ()
       find_package(popt REQUIRED)
-   endif()
+   endif ()
    set(HAVE_POPT_H true)
    add_definitions(-DHAVE_POPT_H)
-endif()
+endif ()
 
 # OpenSigComp
-if(USE_SIGCOMP)
-   if(USE_CONTRIB)
+if (USE_SIGCOMP)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/opensigcomp)
       set(opensigcomp_LIBRARIES opensigcomp)
-   else()
+   else ()
       find_package(opensigcomp REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # fmt
 # Debian: libfmt-dev
-if(USE_FMT)
-   if(USE_CONTRIB)
+if (USE_FMT)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/fmt)
-   else()
+   else ()
       find_package(fmt REQUIRED)
-   endif()
+   endif ()
    set_def(USE_FMT)
-endif()
+endif ()
 
 option_def(USE_IPV6)
 option_def(USE_DTLS)
@@ -392,90 +350,88 @@ option_def(PEDANTIC_STACK)
 
 # MySQL
 # Debian: default-libmysqlclient-dev
-if(USE_MYSQL)
-   if(USE_CONTRIB)
+if (USE_MYSQL)
+   if (USE_CONTRIB)
       # There is a pre-compiled MySQL client binary in contrib
       # so we hardcode the paths to the headers and binary
       # artifacts.
       #add_subdirectory(contrib/MySQLConnectorC)
-      set(MySQL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/contrib/MySQLConnectorC")
+      set(MySQL_ROOT "contrib/MySQLConnectorC")
       set(MySQL_INCLUDE_DIRS "${MySQL_ROOT}/include")
       set(MySQL_LIBRARIES "${MySQL_ROOT}/lib/debug/libmysql.lib")
       set(MySQL_FOUND TRUE)
-   else()
+   else ()
       find_package(MySQL REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # soci (MySQL, PostgreSQL)
 # Debian: libsoci-dev
 # FIXME - hardcoded
 # FIXME - MySQL, PostgreSQL
-if(USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL)
+if (USE_SOCI_POSTGRESQL OR USE_SOCI_MYSQL)
    find_library(SOCI_LIBRARIES soci_core REQUIRED)
    # FIXME include path
    set(SOCI_INCLUDE_DIRS "/usr/include/soci")
    option_def(USE_SOCI_POSTGRESQL)
    option_def(USE_SOCI_MYSQL)
-endif()
+endif ()
 
 # PostgreSQL
 # Debian: libpq-dev postgresql-server-dev-all
-if(USE_POSTGRESQL)
-   if(USE_CONTRIB)
+if (USE_POSTGRESQL)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/psql)
-   else()
+   else ()
       find_package(PostgreSQL REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # GeoIP
 # Debian: libgeoip-dev
-if(USE_MAXMIND_GEOIP)
-   if(USE_CONTRIB)
+if (USE_MAXMIND_GEOIP)
+   if (USE_CONTRIB)
       # FIXME - update reSIProcate for libmaxminddb - successor to GeoIP
       message(FATAL_ERROR "GeoIP has been deprecated upstream, see https://github.com/maxmind/geoip-api-c")
       #add_subdirectory(contrib/GeoIP)
-   else()
+   else ()
       find_package(GeoIP REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # radcli (RADIUS client)
 # Debian: libradcli-dev
 # FIXME: do we need to support alternatives like
 # freeradius-client and radiusclient-ng?
-if(RESIP_HAVE_RADCLI)
-   if(USE_CONTRIB)
+if (RESIP_HAVE_RADCLI)
+   if (USE_CONTRIB)
       do_fail_win32("radcli")
-   else()
+   else ()
       pkg_check_modules(LIBRADIUS radcli REQUIRED)
-   endif()
+   endif ()
    option_def(RESIP_HAVE_RADCLI)
    set_def(USE_RADIUS_CLIENT)
-endif()
+endif ()
 
 # NetSNMP
 # Debian: libsnmp-dev
-if(USE_NETSNMP)
-   if(USE_CONTRIB)
+if (USE_NETSNMP)
+   if (USE_CONTRIB)
       do_fail_win32("netsnmp")
-   else()
+   else ()
       # net-snmp-config --agent-libs
       pkg_check_modules(NETSNMP_AGENT netsnmp-agent REQUIRED)
-   endif()
+   endif ()
    set_def(USE_NETSNMP)
-endif()
-
-option_def(BUILD_REPRO)
+endif ()
 
 set(CMAKE_INSTALL_PKGLIBDIR ${CMAKE_INSTALL_LIBDIR}/${CMAKE_PROJECT_NAME})
 set(CMAKE_INSTALL_MIBDIR ${CMAKE_INSTALL_DATAROOTDIR}/snmp/mibs)
 
-if(BUILD_DSO_PLUGINS)
+if (BUILD_DSO_PLUGINS)
    add_definitions(-DDSO_PLUGINS)
    set(INSTALL_REPRO_PLUGIN_DIR ${CMAKE_INSTALL_PKGLIBDIR}/repro/plugins)
-endif()
+endif ()
 
 set(INSTALL_RETURN_PKGLIB_DIR ${CMAKE_INSTALL_PKGLIBDIR}/reTurnServer)
 
@@ -491,140 +447,38 @@ option_def(BUILD_ICHAT_GW)
 
 # Netxx
 # Debian: libnetxx-dev
-if(USE_NETXX)
-   if(USE_CONTRIB)
+if (USE_NETXX)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/Netxx-0.3.2)
       set(Netxx_LIBRARIES Netxx)
-   else()
+   else ()
       find_package(Netxx REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # cppunit
 # Debian: libcppunit-dev
-if(USE_CPPUNIT)
-   if(USE_CONTRIB)
+if (USE_CPPUNIT)
+   if (USE_CONTRIB)
       add_subdirectory(contrib/cppunit)
       set(CPPUNIT_LIBRARIES cppunit)
-   else()
+   else ()
       pkg_check_modules(CPPUNIT cppunit REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
-# BerkeleyDb
-# Debian: libdb++-dev
-if(USE_BDB)
-   if(USE_NUGET)
-      #nuget_inst(BERKELEYDB "BerkeleyDB-4_8_30-Cpp" "4.8.30.2")
-      #set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/bin")
-      #set(BERKELEYDB_LIBRARIES
-      #      "${BERKELEYDB_LIBRARIES_DIR}/lib/${WIN_ARCH}/Debug/libdb48d.lib")
-      # https://www.nuget.org/packages/berkeley.db.v140
-      nuget_inst(BERKELEYDB "berkeley.db.v140" "5.3.28.3")
-      set(BERKELEYDB_LIBRARIES_DIR "${BERKELEYDB_ROOT_DIR}/lib/${WIN_ARCH}/Debug")
-      set(BERKELEYDB_LIBRARIES
-            "${BERKELEYDB_LIBRARIES_DIR}/libdb53d.lib")
-      # FIXME - check if those libraries and headers really exist
-      set(BERKELEYDB_FOUND TRUE)
-   elseif(USE_CONTRIB)
-      add_subdirectory(contrib/db)
-   else()
-      find_package(BerkeleyDb REQUIRED)
-   endif()
-   set(DB_HEADER "db_cxx.h")
-endif()
-
-# PCRE
-# Debian: libpcre3-dev
-# FIXME - deprecate PCRE in favour of C++11 <regex>
-if(USE_PCRE)
-   if(USE_NUGET)
-      nuget_inst(PCRE "pcre" "8.33.0.1")
-      if(BUILD_SHARED_LIBS)
-         set(WIN_LIB_LINKING "dynamic")
-      else()
-         set(WIN_LIB_LINKING "static")
-         add_definitions(-DPCRE_STATIC)
-      endif()
-      set(PCRE_LIBRARIES_DIR "${PCRE_ROOT_DIR}/lib/v110/${WIN_ARCH}/Debug/${WIN_LIB_LINKING}/utf8")
-      set(PCRE_LIBRARIES
-              "${PCRE_LIBRARIES_DIR}/pcre8.lib")
-      # FIXME - check if those libraries and headers really exist
-      if(NOT EXISTS "${PCRE_LIBRARIES}")
-         message(FATAL_ERROR "could not find ${PCRE_LIBRARIES}")
-      endif()
-      set(PCRE_FOUND TRUE)
-   elseif(USE_CONTRIB)
-      add_subdirectory(contrib/pcre)
-      set(PCRE_LIBRARIES pcre)
-   else()
-      pkg_check_modules(PCRE REQUIRED libpcre)
-   endif()
-endif()
-
-# Cajun
-# Debian: libcajun-dev
-if(USE_CAJUN)
-   if(USE_CONTRIB)
-      # FIXME: convert Cajun to CMake build system
-      # FIXME: include Cajun as a Git submodule or NuGet
-      #add_subdirectory(contrib/cajun)
-      set(CAJUN_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/cajun/include")
-   else()
-      find_package(cajun REQUIRED)
-   endif()
-endif()
-
-# ASIO
-# Debian: libasio-dev
-# modern ASIO requires C++11
-if(USE_ASIO)
-   if(USE_CONTRIB)
-      # FIXME: include asio as a Git submodule or NuGet
-      set(ASIO_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/contrib/asio")
-   else()
-      find_package(ASIO REQUIRED)
-   endif()
-endif()
-
-# Boost
-# Debian: libboost-all-dev
-if(USE_BOOST)
-   if(USE_NUGET)
-      nuget_inst(BOOST "boost" "1.80.0")
-      message("Using ${BOOST_ROOT_DIR} and ${BOOST_LIBRARIES}")
-      set(BOOST_LIBRARIES
-            "${BOOST_LIBRARIES_DIR}/libboostcore.lib")
-      # FIXME - check if those libraries and headers really exist
-      set(BOOST_FOUND TRUE)
-   else()
-      find_package(Boost REQUIRED)
-   endif()
-endif()
-
-if(BUILD_TELEPATHY_CM)
-   option_def(BUILD_TELEPATHY_CM)
-   set(USE_QT5)
-endif()
-
-# Telepathy-Qt
-# Debian: libtelepathy-qt5-dev
-if(USE_QT5)
-   # PKG_CHECK_MODULES([QT5], [Qt5Core, Qt5DBus Qt5Network])
-   # PKG_CHECK_MODULES([TP_QT5], [TelepathyQt5, TelepathyQt5Service])])
+if (BUILD_TELEPATHY_CM)
    find_package(TelepathyQt5 REQUIRED)
-endif()
-
-option_def(BUILD_RECON)
+endif ()
 
 # SRTP2
 # Debian: libsrtp2-dev
-if(USE_SRTP)
-   if(USE_SRTP1)
+if (USE_SRTP)
+   if (USE_SRTP1)
       find_package(srtp REQUIRED)
-   else()
+   else ()
       # FIXME - not in NuGet, not CMake native
-      if(USE_CONTRIB)
+      if (USE_CONTRIB)
          add_subdirectory("contrib/srtp")
          #set(libsrtp2_INCLUDE_DIRS "${libsrtp2_INCLUDE_DIRS}")
          #set(libsrtp2_LIBRARIES "${libsrtp2_LIBRARIES}")
@@ -632,35 +486,35 @@ if(USE_SRTP)
          set(SRTP2_INCLUDE_DIRS "${libsrtp2_SOURCE_DIR}/include")
          set(SRTP2_LIBRARIES "${libsrtp2_BINARY_DIR}/contrib/srtp/${CMAKE_BUILD_TYPE}/srtp2.lib")
          set(SRTP_FOUND TRUE)
-      else()
+      else ()
          find_package(srtp2 REQUIRED)
-      endif()
-   endif()
-endif()
+      endif ()
+   endif ()
+endif ()
 
 # sipXtapi
 # Debian: libsipxtapi-dev
-if(USE_SIPXTAPI)
+if (USE_SIPXTAPI)
    option_def(USE_SIPXTAPI)
    find_package(sipXtapi REQUIRED)
-   if(NOT WIN32)
+   if (NOT WIN32)
       set(SIPX_NO_RECORD true)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__pingtel_on_posix__")
-   endif()
-endif()
+   endif ()
+endif ()
 
 option_def(USE_KURENTO)
 
 # gstreamermm
 # Debian: libgstreamermm-1.0-dev
-if(USE_GSTREAMER)
+if (USE_GSTREAMER)
    option_def(USE_GSTREAMER)
    pkg_check_modules(GSTREAMERMM_1_0 gstreamermm-1.0 REQUIRED)
 
    # gstwebrtc-1.0
    # Debian: libgstreamer-plugins-bad1.0-dev
    pkg_check_modules(GST_WEBRTC gstreamer-webrtc-1.0 REQUIRED)
-endif()
+endif ()
 
 option_def(USE_LIBWEBRTC)
 
@@ -668,34 +522,23 @@ option_def(RECON_LOCAL_HW_TESTS)
 
 # Python
 # Debian: python3-dev python3-cxx-dev
-if(BUILD_PYTHON)
+if (BUILD_PYTHON)
    find_package(Python3 COMPONENTS Development REQUIRED)
    pkg_check_modules(PYCXX PyCXX REQUIRED)
-   if(NOT PYCXX_SRCDIR)
+   if (NOT PYCXX_SRCDIR)
       pkg_get_variable(PYCXX_SRCDIR PyCXX srcdir)
-      if(NOT PYCXX_SRCDIR)
+      if (NOT PYCXX_SRCDIR)
          message(FATAL_ERROR "Failed to obtain PyCXX srcdir automatically, please set it manually or disable BUILD_PYTHON")
-      endif()
-   endif()
+      endif ()
+   endif ()
    add_definitions(-DPy_LIMITED_API=0x03090000)
-endif()
+endif ()
 
-# Apache Qpid Proton
-# Debian: libqpid-proton-cpp12-dev
-if(BUILD_QPID_PROTON)
-   if(USE_NUGET)
-      # FIXME - they only publish the C API, need full C++ API
-      nuget_inst(QPIDPROTON "Apache.Qpid.Proton" "1.0.0-M6")
-      message("Using ${QPIDPROTON_ROOT_DIR} and ${QPIDPROTON_LIBRARIES}")
-      set(QPIDPROTON_LIBRARIES
-            "${QPIDPROTON_LIBRARIES_DIR}/libqpidproton.lib")
-      # FIXME - check if those libraries and headers really exist
-      set(QPIDPROTON_FOUND TRUE)
-   else()
-      pkg_check_modules(QPIDPROTON libqpid-proton-cpp REQUIRED)
-   endif()
-   option_def(BUILD_QPID_PROTON)
-endif()
+if (BUILD_QPID_PROTON)
+   # Apache Qpid Proton C++ -------------------------------------------
+   find_package(libqpid-proton REQUIRED)
+endif ()
+
 
 option_def(RESIP_ASSERT_SYSLOG)
 
@@ -709,18 +552,18 @@ option_def(RESIP_ASSERT_SYSLOG)
 
 # websocketpp
 # Debian: libwebsocketpp-dev
-if(USE_WEBSOCKETPP)
-   if(USE_NUGET)
+if (USE_WEBSOCKETPP)
+   if (USE_NUGET)
       nuget_inst(WEBSOCKETPP "websocketpp-mtk.repack" "0.7.0-mtk19")
       message("Using ${WEBSOCKETPP_ROOT_DIR} and ${WEBSOCKETPP_LIBRARIES}")
       set(WEBSOCKETPP_LIBRARIES
-            "${WEBSOCKETPP_LIBRARIES_DIR}/libwebsocketpp.lib")
+              "${WEBSOCKETPP_LIBRARIES_DIR}/libwebsocketpp.lib")
       # FIXME - check if those libraries and headers really exist
       set(WEBSOCKETPP_FOUND TRUE)
-   else()
+   else ()
       find_package(websocketpp REQUIRED)
-   endif()
-endif()
+   endif ()
+endif ()
 
 # monotonic clock
 include(CheckCSourceRuns)
@@ -733,9 +576,9 @@ check_c_source_runs("
       return 0;
    }" HAVE_CLOCK_GETTIME_MONOTONIC)
 
-if(HAVE_CLOCK_GETTIME_MONOTONIC)
+if (HAVE_CLOCK_GETTIME_MONOTONIC)
    add_definitions(-DHAVE_CLOCK_GETTIME_MONOTONIC)
-endif()
+endif ()
 
 # epoll
 include(CheckIncludeFiles)
@@ -748,16 +591,16 @@ check_include_files(sys/epoll.h HAVE_EPOLL)
 # gperf
 set(GPERF_SIZE_TYPE "size_t")
 
-if(WIN32)
+if (WIN32)
    add_definitions(-DNOMINMAX)
-endif()
+endif ()
 
 ##############################
 ### Generation of config.h ###
 ##############################
 # TODO - Bring more values from autotools
 add_definitions(-DHAVE_CONFIG_H)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Used to group targets together when CMake generates projects for IDEs
@@ -767,27 +610,30 @@ add_subdirectory(rutil)
 
 add_subdirectory(resip)
 
-if(BUILD_REPRO)
+if (BUILD_REPRO)
    add_subdirectory(repro)
-endif()
+endif ()
 
-if(BUILD_TFM)
+if (BUILD_TFM)
    add_subdirectory(tfm)
-endif()
+endif ()
 
+if (REGENERATE_MEDIA_SAMPLES)
+   find_package(soxr REQUIRED)
+endif ()
 add_subdirectory(media)
 
-if(BUILD_RETURN)
+if (BUILD_RETURN)
    add_subdirectory(reTurn)
-endif()
+endif ()
 
-if(BUILD_RECON)
+if (BUILD_RECON)
    add_subdirectory(reflow)
-endif()
+endif ()
 
-if(BUILD_P2P)
+if (BUILD_P2P)
    add_subdirectory(p2p)
-endif()
+endif ()
 
 add_subdirectory(apps)
 
@@ -795,20 +641,20 @@ add_subdirectory(apps)
 # The tarball containing a spec file can be fed directly
 # to the rpmbuild command.
 configure_file(
-   resiprocate.spec.in
-   resiprocate.spec
-   @ONLY)
+        resiprocate.spec.in
+        resiprocate.spec
+        @ONLY)
 
 # Add 'make dist' command for creating release tarball
-set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-set (CPACK_SOURCE_GENERATOR "TGZ")
-set (CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_SOURCE_GENERATOR "TGZ")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION}")
 
 # pax appears to be the default, we need it due to some filenames
 #set (COMPRESSION_OPTIONS --format=pax)
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/\\\\.git/")
-list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.gitignore")
+list(APPEND CPACK_SOURCE_IGNORE_FILES ".gitignore")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeFiles/")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/_CPack_Packages/")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.deps/")
@@ -818,13 +664,13 @@ list(APPEND CPACK_SOURCE_IGNORE_FILES "/.*\\\\.zip")
 list(APPEND CPACK_SOURCE_IGNORE_FILES ".*\\\\.o")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "lib.*\\\\.so*")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/CMakeCache.txt")
-list(APPEND CPACK_SOURCE_IGNORE_FILES "/contrib/")
-list(APPEND CPACK_SOURCE_IGNORE_FILES "/debian/")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/contrib")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "/debian")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "Makefile")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "/config.h$")
 
-include (CPack)
-add_custom_target (dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+include(CPack)
+add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
 ###############
 ### Summary ###
