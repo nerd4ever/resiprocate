@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 # Use at your own risk.
 # ================================================================================
 
-list(APPEND CMAKE_MODULE_PATH "build/cmake_modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/build/cmake_modules")
 
 if (POLICY CMP0042)
    CMAKE_POLICY(SET CMP0042 NEW)
