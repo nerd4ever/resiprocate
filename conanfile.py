@@ -74,20 +74,22 @@ class ResiprocateConan(ConanFile):
     generators = "CMakeDeps"
     exports_sources = (
         "CMakeLists.txt",
-        "src/*",
         "config.h.cmake",
-        "rutil/*",
-        "resip/*",
-        "emacs/*",
-        "snmp/*",
-        "contrib/*",
+        "apps/*",
         "build/*",
+        "contrib/*",
+        "debian/*",
+        "emacs/*",
+        "media/*",
+        "p2p/*",
+        "reflow/*",
+        "repro/*",
+        "resip/*",
+        "reTurn/*",
+        "rutil/*",
+        "snmp/*",
         "tfm/*",
         "tools/*",
-        "p2p/*",
-        "media/*",
-        "reflow/*",
-        "reTurn/*"
     )
 
     def source(self):
