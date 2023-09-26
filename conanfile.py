@@ -106,7 +106,7 @@ class ResiprocateConan(ConanFile):
         "enable_repro": False,
         "enable_recon": False,
         "enable_dso_plugins": True,
-        "enable_return": True,
+        "enable_return": False,
         "enable_telepathy_cm": False,
         "enable_qpid_proton": False,
         "enable_test": False,
@@ -157,6 +157,7 @@ class ResiprocateConan(ConanFile):
             tc.variables["BUILD_SHARED_LIBS"] = "ON" if self.options.enable_repro else "OFF"
         # ENABLE_TEST ----------------------------------------------------
         tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
+        tc.preprocessor_definitions["TEST"] = 1 if self.options.enable_test else 0
 
         # BUILD_REPRO ----------------------------------------------------
         tc.variables["BUILD_REPRO"] = "ON" if self.options.enable_repro else "OFF"
