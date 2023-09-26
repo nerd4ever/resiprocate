@@ -130,6 +130,7 @@ class ResiprocateConan(ConanFile):
         "snmp/*",
         "tfm/*",
         "tools/*",
+        "resiprocate.spec.in/*",
     )
 
     def source(self):
