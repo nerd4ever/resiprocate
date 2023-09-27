@@ -188,11 +188,6 @@ class ResiprocateConan(ConanFile):
         tc.generate()
 
     def build(self):
-        current_dir = os.getcwd()
-        print("current dir: " + current_dir)  # Isto deve listar o diretório 'resiprocate'
-        print(os.listdir(self.source_folder))  # Isto deve listar o diretório 'resiprocate'
-        print(os.listdir(os.path.join(self.source_folder, "resiprocate")))  # Isto deve listar o CMakeLists.txt
-
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
@@ -202,19 +197,9 @@ class ResiprocateConan(ConanFile):
         cmake.install()
 
     def package_info(self):
+        self.cpp_info.set_property("cmake_file_name", "resiprocate")
+        self.cpp_info.set_property("cmake_target_name", "resiprocate")
         self.cpp_info.components["resiprocate"].libs = ["rutil", "resipmedia", "resip", "dum", "resipares"]
-        self.cpp_info.components["dum"].libs = ["dum"]
-        self.cpp_info.components["dum"].requires = ["resip"]
-
-        self.cpp_info.components["resip"].libs = ["resip"]
-
-        self.cpp_info.components["resipares"].libs = ["resipares"]
-
-
-        self.cpp_info.components["resipmedia"].libs = ["resipmedia"]
-        self.cpp_info.components["resipmedia"].requires = ["rutil"]
-
-        self.cpp_info.components["rutil"].libs = ["rutil"]
 
     def requirements(self):
         if self.options.enable_repro:
