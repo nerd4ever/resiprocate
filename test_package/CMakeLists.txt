@@ -5,7 +5,16 @@ endif ()
 
 project(example CXX)
 
-find_package(resiprocate CONFIG REQUIRED)
+#set(RESIP_COMPONENTS rutil resipmedia resip dum resipares)
+#
+#foreach(COMP ${RESIP_COMPONENTS})
+#    find_package(${COMP} REQUIRED)
+#    include_directories(${${COMP}_INCLUDE_DIRS})
+#    list(APPEND example-deps ${${COMP}_LIBRARIES})
+#endforeach()
+#
+#find_package(resiprocate CONFIG REQUIRED COMPONENTS rutil resipmedia resip dum resipares)
+find_package(resiprocate REQUIRED)
 include_directories(${resiprocate_INCLUDE_DIRS})
 list(APPEND example-deps ${resiprocate_LIBRARIES})
 

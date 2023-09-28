@@ -57,6 +57,10 @@ required_conan_version = ">=2.0.0"
 class ResiprocateConan(ConanFile):
     build_policy = "missing"
     name = "resiprocate"
+    description = "The project is dedicated to maintaining a complete, correct, and commercially usable implementation of SIP and a few related protocols. "
+    topics = ("sip", "voip", "communication", "signaling")
+    homepage = "https://www.resiprocate.org"
+    license = "VSL-1.0"
     version = "1.12.0-conan"
     settings = "os", "compiler", "build_type", "arch"
     options = {
@@ -112,7 +116,6 @@ class ResiprocateConan(ConanFile):
         "enable_qpid_proton": False,
         "enable_test": False,
     }
-    generators = "CMakeDeps"
     exports_sources = (
         "CMakeLists.txt",
         "config.h.cmake",
@@ -151,6 +154,11 @@ class ResiprocateConan(ConanFile):
             self.options.enable_android = True
 
     def generate(self):
+
+        deps = CMakeDeps(self)
+        deps.check_components_exist = True
+        deps.generate()
+
         tc = CMakeToolchain(self)
         # SHARED OR STATIC LIBRARIES -------------------------------------
         if self.options.shared:
@@ -197,9 +205,39 @@ class ResiprocateConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.set_property("cmake_file_name", "resiprocate")
-        self.cpp_info.set_property("cmake_target_name", "resiprocate")
-        self.cpp_info.components["resiprocate"].libs = ["rutil", "resipmedia", "resip", "dum", "resipares"]
+        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares"]
+        if self.settings.os in ("Linux", "FreeBSD"):
+            self.cpp_info.system_libs = ["pthread"]
+        bin_path = os.path.join(self.package_folder, "bin")
+        self.output.info("Appending PATH environment variable: {}".format(bin_path))
+        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
+
+        # self.cpp_info.set_property("cmake_file_name", "resiprocate")
+        #
+        # # Componente rutil
+        # self.cpp_info.components["rutil"].set_property("cmake_target_name", "rutil")
+        # self.cpp_info.components["rutil"].set_property("cmake_file_name", "rutil")
+        # self.cpp_info.components["rutil"].libs = ["rutil"]
+        #
+        # # Componente resipmedia
+        # self.cpp_info.components["resipmedia"].set_property("cmake_target_name", "resipmedia")
+        # self.cpp_info.components["resipmedia"].set_property("cmake_file_name", "resipmedia")
+        # self.cpp_info.components["resipmedia"].libs = ["resipmedia"]
+        #
+        # # Componente resip
+        # self.cpp_info.components["resip"].set_property("cmake_target_name", "resip")
+        # self.cpp_info.components["resip"].set_property("cmake_file_name", "resip")
+        # self.cpp_info.components["resip"].libs = ["resip"]
+        #
+        # # Componente dum
+        # self.cpp_info.components["dum"].set_property("cmake_target_name", "dum")
+        # self.cpp_info.components["dum"].set_property("cmake_file_name", "dum")
+        # self.cpp_info.components["dum"].libs = ["dum"]
+        #
+        # # Componente resipares
+        # self.cpp_info.components["resipares"].set_property("cmake_target_name", "resipares")
+        # self.cpp_info.components["resipares"].set_property("cmake_file_name", "resipares")
+        # self.cpp_info.components["resipares"].libs = ["resipares"]
 
     def requirements(self):
         if self.options.enable_repro:
