@@ -44,15 +44,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # ------------------------------------------------------------------------------
-import os
-import glob
-import shutil
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
-from conan.tools.files import get, chdir
 
 required_conan_version = ">=2.0.0"
-
 
 class ResiprocateConan(ConanFile):
     build_policy = "missing"
@@ -66,83 +61,38 @@ class ResiprocateConan(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
-        "with_c_ares": [True, False],
-        "with_ssl": [True, False],
-        "with_popt": [True, False],
-        "with_soci_postgresql": [True, False],
-        "with_soci_mysql": [True, False],
-        "with_netsnmp": [True, False],
-        "with_srtp": [True, False],
         "with_webrtc": [True, False],
-        "with_syslog": [True, False],
         "with_resample": [True, False],
-        "with_fmt": [True, False],
         "enable_android": [True, False],
         "enable_ipv6": [True, False],
         "enable_dtls": [True, False],
         "pedantic_stack": [True, False],
-        "enable_repro": [True, False],  # <- Build repro SIP prox
         "enable_dso_plugins": [True, False],
-        "enable_return": [True, False],
-        "enable_telepathy_cm": [True, False],
-        "enable_qpid_proton": [True, False],
-        "enable_recon": [True, False],
         "enable_test": [True, False],
     }
 
     default_options = {
         "shared": False,
         "fPIC": True,
-        "with_popt": True,
-        "with_ssl": True,
-        "with_soci_postgresql": False,
-        "with_soci_mysql": False,
-        "with_c_ares": False,
-        "with_fmt": False,
-        "with_netsnmp": False,
-        "with_srtp": True,
         "with_webrtc": False,
-        "with_syslog": False,
         "with_resample": False,
         "enable_android": False,
         "enable_ipv6": True,
         "enable_dtls": True,
         "pedantic_stack": False,
-        "enable_repro": False,
-        "enable_recon": False,
         "enable_dso_plugins": True,
-        "enable_return": False,
-        "enable_telepathy_cm": False,
-        "enable_qpid_proton": False,
         "enable_test": False,
     }
+
     exports_sources = (
         "CMakeLists.txt",
         "config.h.cmake",
-        "apps/*",
         "build/*",
-        "contrib/*",
-        "debian/*",
-        "emacs/*",
         "media/*",
-        "p2p/*",
-        "reflow/*",
-        "repro/*",
         "resip/*",
-        "reTurn/*",
         "rutil/*",
-        "snmp/*",
-        "tfm/*",
-        "tools/*",
         "resiprocate.spec.in",
     )
-
-    def source(self):
-        # self.run("git clone https://github.com/resiprocate/resiprocate.git")
-        self.run("git clone -b conan-recipe-feature https://github.com/nerd4ever/resiprocate.git")
-
-    # url = self.conan_data["sources"][self.version]["url"]
-    # get(self, url, strip_root=True)
 
     def layout(self):
         cmake_layout(self)
@@ -154,7 +104,6 @@ class ResiprocateConan(ConanFile):
             self.options.enable_android = True
 
     def generate(self):
-
         deps = CMakeDeps(self)
         deps.check_components_exist = True
         deps.generate()
@@ -162,37 +111,14 @@ class ResiprocateConan(ConanFile):
         tc = CMakeToolchain(self)
         # SHARED OR STATIC LIBRARIES -------------------------------------
         if self.options.shared:
-            tc.variables["BUILD_SHARED_LIBS_DEFAULT"] = "ON" if self.options.enable_repro else "OFF"
-            tc.variables["BUILD_SHARED_LIBS"] = "ON" if self.options.enable_repro else "OFF"
-        # ENABLE_TEST ----------------------------------------------------
-        tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
-
-        # BUILD_REPRO ----------------------------------------------------
-        tc.variables["BUILD_REPRO"] = "ON" if self.options.enable_repro else "OFF"
-        tc.variables["BUILD_DSO_PLUGINS"] = "ON" if self.options.enable_dso_plugins else "OFF"
-        tc.variables["BUILD_RETURN"] = "ON" if self.options.enable_return else "OFF"
-        tc.preprocessor_definitions["BUILD_REPRO"] = 1 if self.options.enable_repro else 0
-        # BUILD_TELEPATHY_CM ---------------------------------------------
-        tc.preprocessor_definitions["BUILD_TELEPATHY_CM"] = 1 if self.options.enable_telepathy_cm else 0
-        tc.variables["BUILD_TELEPATHY_CM"] = "ON" if self.options.enable_telepathy_cm else "OFF"
-        # BUILD_RETURN ---------------------------------------------------
-        tc.preprocessor_definitions["BUILD_RETURN"] = 1 if self.options.enable_return else 0
-        tc.variables["BUILD_RETURN"] = "ON" if self.options.enable_return else "OFF"
-        # BUILD_RECON ----------------------------------------------------
-        tc.preprocessor_definitions["BUILD_RECON"] = 1 if self.options.enable_recon else 0
-        tc.variables["BUILD_RECON"] = "ON" if self.options.enable_recon else "OFF"
-        # BUILD_RECON ----------------------------------------------------
-        tc.preprocessor_definitions["USE_POPT"] = 1 if self.options.with_popt else 0
-        tc.variables["USE_POPT"] = "ON" if self.options.with_popt else "OFF"
-        if self.options.enable_recon:
-            tc.preprocessor_definitions["USE_SRTP"] = 1
-        tc.preprocessor_definitions["BUILD_QPID_PROTON"] = 1 if self.options.enable_qpid_proton else 0
-        tc.variables["BUILD_QPID_PROTON"] = "ON" if self.options.enable_qpid_proton else "OFF"
-        if self.options.enable_qpid_proton:
-            tc.preprocessor_definitions["BUILD_QPID_PROTON"] = 1
+            tc.variables["BUILD_SHARED_LIBS_DEFAULT"] = "ON" if self.options.shared else "OFF"
+            tc.variables["BUILD_SHARED_LIBS"] = "ON" if self.options.shared else "OFF"
         # WITH_RESAMPLE --------------------------------------------------
         if self.options.with_resample:
             tc.variables["REGENERATE_MEDIA_SAMPLES"] = "ON" if self.options.with_resample else "OFF"
+        # ENABLE_TEST ----------------------------------------------------
+        tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
+
         tc.generate()
 
     def build(self):
@@ -205,71 +131,34 @@ class ResiprocateConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares"]
+        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares", "resipmedia"]
         if self.settings.os in ("Linux", "FreeBSD"):
             self.cpp_info.system_libs = ["pthread"]
-        bin_path = os.path.join(self.package_folder, "bin")
-        self.output.info("Appending PATH environment variable: {}".format(bin_path))
-        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
 
-        # self.cpp_info.set_property("cmake_file_name", "resiprocate")
-        #
-        # # Componente rutil
-        # self.cpp_info.components["rutil"].set_property("cmake_target_name", "rutil")
-        # self.cpp_info.components["rutil"].set_property("cmake_file_name", "rutil")
-        # self.cpp_info.components["rutil"].libs = ["rutil"]
-        #
-        # # Componente resipmedia
-        # self.cpp_info.components["resipmedia"].set_property("cmake_target_name", "resipmedia")
-        # self.cpp_info.components["resipmedia"].set_property("cmake_file_name", "resipmedia")
-        # self.cpp_info.components["resipmedia"].libs = ["resipmedia"]
-        #
-        # # Componente resip
-        # self.cpp_info.components["resip"].set_property("cmake_target_name", "resip")
-        # self.cpp_info.components["resip"].set_property("cmake_file_name", "resip")
-        # self.cpp_info.components["resip"].libs = ["resip"]
-        #
-        # # Componente dum
-        # self.cpp_info.components["dum"].set_property("cmake_target_name", "dum")
-        # self.cpp_info.components["dum"].set_property("cmake_file_name", "dum")
-        # self.cpp_info.components["dum"].libs = ["dum"]
-        #
-        # # Componente resipares
-        # self.cpp_info.components["resipares"].set_property("cmake_target_name", "resipares")
-        # self.cpp_info.components["resipares"].set_property("cmake_file_name", "resipares")
-        # self.cpp_info.components["resipares"].libs = ["resipares"]
+        self.cpp_info.set_property("cmake_file_name", "resiprocate")
+
+        # Componente rutil
+        self.cpp_info.components["rutil"].set_property("cmake_target_name", "rutil")
+        self.cpp_info.components["rutil"].libs = ["rutil"]
+
+        # Componente resipmedia
+        self.cpp_info.components["resipmedia"].set_property("cmake_target_name", "resipmedia")
+        self.cpp_info.components["resipmedia"].libs = ["resipmedia"]
+
+        # Componente resip
+        self.cpp_info.components["resip"].set_property("cmake_target_name", "resip")
+        self.cpp_info.components["resip"].libs = ["resip"]
+
+        # Componente dum
+        self.cpp_info.components["dum"].set_property("cmake_target_name", "dum")
+        self.cpp_info.components["dum"].libs = ["dum"]
+
+        # Componente resipares
+        self.cpp_info.components["resipares"].set_property("cmake_target_name", "resipares")
+        self.cpp_info.components["resipares"].libs = ["resipares"]
 
     def requirements(self):
-        if self.options.enable_repro:
-            self.requires("libdb/5.3.28")
-            self.requires("pcre/8.45")
-            self.requires("cajun-jsonapi/2.1.1")
-        if self.options.enable_return:
-            self.requires("asio/1.28.1")
-        if self.options.with_netsnmp:
-            self.requires("net-snmp/5.9.1")
-        if self.options.with_ssl:
-            self.requires("openssl/1.1.1t")
-        if self.options.with_popt:
-            self.requires("popt/1.16")
-        if self.options.with_soci_postgresql or self.options.with_soci_mysql:
-            self.requires("soci/4.0.3")
-            if self.options.with_soci_postgresql:
-                self.requires("libpq/15.4")
-            if self.options.with_soci_mysql:
-                self.requires("libmysqlclient/8.1.0")
-        if self.options.with_popt:
-            self.requires("c-ares/1.19.1")
-        if self.options.with_fmt:
-            self.requires("fmt/10.1.1")
-        if self.options.with_srtp:
-            self.requires("libsrtp/2.4.2")
-        if self.options.with_resample:
-            self.requires("soxr/0.1.3")
-        if self.options.enable_recon:
-            self.requires("libsrtp/2.4.2")
-        if self.options.enable_telepathy_cm:
-            self.requires("qt/5.15.10")
-        if self.options.enable_qpid_proton:
-            # No publication has been made so far from the library, a fictitious name is being used
-            self.requires("libqpid-proton/0.39.0")
+        self.requires("openssl/1.1.1t")
+        self.requires("c-ares/1.19.1", transitive_headers=True)
+        self.requires("libsrtp/2.4.2")
+        self.requires("soxr/0.1.3")
