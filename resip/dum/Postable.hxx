@@ -1,6 +1,8 @@
 #ifndef RESIP_Postable_hxx
 #define RESIP_Postable_hxx
 
+#include <resip/stack/Message.hxx>
+
 namespace resip
 {
 
