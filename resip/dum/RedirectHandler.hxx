@@ -1,6 +1,7 @@
 #if !defined(RESIP_REDIRECTHANDLER_HXX)
 #define RESIP_REDIRECTHANDLER_HXX
 
+#include "resip/dum/Handles.hxx"
 
 namespace resip
 {
@@ -15,11 +16,11 @@ class RedirectHandler
 
       //3xx that isn't 380 or 305 has been received
       virtual void onRedirectReceived(AppDialogSetHandle, const SipMessage& response)=0;
-      
+
       //return true if this target is acceptable
       virtual bool onTryingNextTarget(AppDialogSetHandle, const SipMessage& request)=0;
 };
-   
+
 
 }
 
