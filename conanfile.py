@@ -46,8 +46,10 @@
 # ------------------------------------------------------------------------------
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.files import get, rename
 
-required_conan_version = ">=2.0.0"
+required_conan_version = ">=1.53.0"
+
 
 class ResiprocateConan(ConanFile):
     build_policy = "missing"
@@ -56,7 +58,6 @@ class ResiprocateConan(ConanFile):
     topics = ("sip", "voip", "communication", "signaling")
     homepage = "https://www.resiprocate.org"
     license = "VSL-1.0"
-    version = "1.12.0-conan"
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "shared": [True, False],
@@ -85,6 +86,7 @@ class ResiprocateConan(ConanFile):
     }
 
     exports_sources = (
+        "CMakeListsConan.cmake",
         "CMakeLists.txt",
         "config.h.cmake",
         "build/*",
@@ -102,6 +104,9 @@ class ResiprocateConan(ConanFile):
             del self.options.fPIC
         if self.settings.os == "Android":
             self.options.enable_android = True
+    def source(self):
+        rename(self, "CMakeLists.txt", "CMakeLists.original")
+        rename(self, "CMakeListsConan.cmake", "CMakeLists.txt")
 
     def generate(self):
         deps = CMakeDeps(self)
@@ -109,6 +114,8 @@ class ResiprocateConan(ConanFile):
         deps.generate()
 
         tc = CMakeToolchain(self)
+        # POPT -----------------------------------------------------------
+        tc.variables["USE_POPT"] = "ON" if self.options.shared else "OFF"
         # SHARED OR STATIC LIBRARIES -------------------------------------
         if self.options.shared:
             tc.variables["BUILD_SHARED_LIBS_DEFAULT"] = "ON" if self.options.shared else "OFF"
@@ -118,7 +125,6 @@ class ResiprocateConan(ConanFile):
             tc.variables["REGENERATE_MEDIA_SAMPLES"] = "ON" if self.options.with_resample else "OFF"
         # ENABLE_TEST ----------------------------------------------------
         tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
-
         tc.generate()
 
     def build(self):
@@ -162,3 +168,4 @@ class ResiprocateConan(ConanFile):
         self.requires("c-ares/1.19.1", transitive_headers=True)
         self.requires("libsrtp/2.4.2")
         self.requires("soxr/0.1.3")
+        self.requires("popt/1.9.1@nerd4ever")
