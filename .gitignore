@@ -72,4 +72,5 @@ CPackSourceConfig.cmake
 **/lib*.so
 **/lib*.so.*
 **/Testing/
-
+CMakeUserPresets.json
+deps

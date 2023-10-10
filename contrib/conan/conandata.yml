@@ -1,0 +1,5 @@
+#https://github.com/resiprocate/resiprocate/archive/refs/tags/resiprocate-1.12.0.tar.gz
+sources:
+  "1.12.0":
+    url: https://github.com/nerd4ever/resiprocate/archive/refs/tags/1.12.0-cmake-added.tar.gz
+    sha256: 75d2a64accebb65cb7a2e5aa12110f4db6b1406cf4dd8c5c6c6b9413af15d35d
