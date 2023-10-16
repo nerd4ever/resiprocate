@@ -171,8 +171,11 @@ set(ARES_LIBRARIES ${c-ares_LIBRARIES})
 include_directories(${c-ares_INCLUDE_DIRS})
 link_directories(${c-ares_LIBRARY_DIRS})
 set(USE_CARES true)
+
 # OpenSSL ---------------------------------------
 find_package(OpenSSL REQUIRED) # HINTS ${OPENSSL_LIBRARIES})
+include_directories(${OpenSSL_INCLUDE_DIRS})
+link_directories(${OpenSSL_LIBRARY_DIRS})
 # Oldest OpenSSL API to target (1.1.1)
 add_compile_definitions(OPENSSL_API_COMPAT=0x10101000L)
 set_def(USE_SSL)

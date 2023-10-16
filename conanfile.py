@@ -70,7 +70,7 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": [True, False],
         "enable_dso_plugins": [True, False],
         "enable_test": [True, False],
-        "enable_recon": [True, False]
+        "enable_recon": [True, False],
     }
 
     default_options = {
@@ -84,7 +84,7 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": False,
         "enable_dso_plugins": True,
         "enable_test": False,
-        "enable_recon": True
+        "enable_recon": True,
     }
 
     exports_sources = (
@@ -95,6 +95,7 @@ class ResiprocateConan(ConanFile):
         "media/*",
         "reflow/*",
         "resip/*",
+        "reTurn/*",
         "rutil/*",
         "resiprocate.spec.in",
     )
@@ -131,7 +132,7 @@ class ResiprocateConan(ConanFile):
         # ENABLE_RECON ---------------------------------------------------
         tc.variables["BUILD_RECON"] = "ON" if self.options.enable_recon else "OFF"
         tc.preprocessor_definitions["BUILD_RECON"] = 1 if self.options.enable_recon else 0
-        # SSL ----------------------------------------------------
+        # SSL ------------------------------------------------------------
         tc.variables["WITH_SSL"] = "ON"
         tc.generate()
 
@@ -151,7 +152,7 @@ class ResiprocateConan(ConanFile):
 
         self.cpp_info.set_property("cmake_file_name", "resiprocate")
 
-        # Componente recon
+        # Componente reflow
         self.cpp_info.components["reflow"].set_property("cmake_target_name", "reflow")
         self.cpp_info.components["reflow"].libs = ["reflow"]
 
