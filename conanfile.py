@@ -70,6 +70,7 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": [True, False],
         "enable_dso_plugins": [True, False],
         "enable_test": [True, False],
+        "enable_recon": [True, False]
     }
 
     default_options = {
@@ -83,6 +84,7 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": False,
         "enable_dso_plugins": True,
         "enable_test": False,
+        "enable_recon": True
     }
 
     exports_sources = (
@@ -91,6 +93,7 @@ class ResiprocateConan(ConanFile):
         "config.h.cmake",
         "build/*",
         "media/*",
+        "reflow/*",
         "resip/*",
         "rutil/*",
         "resiprocate.spec.in",
@@ -125,6 +128,11 @@ class ResiprocateConan(ConanFile):
             tc.variables["REGENERATE_MEDIA_SAMPLES"] = "ON" if self.options.with_resample else "OFF"
         # ENABLE_TEST ----------------------------------------------------
         tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
+        # ENABLE_RECON ---------------------------------------------------
+        tc.variables["BUILD_RECON"] = "ON" if self.options.enable_recon else "OFF"
+        tc.preprocessor_definitions["BUILD_RECON"] = 1 if self.options.enable_recon else 0
+        # SSL ----------------------------------------------------
+        tc.variables["WITH_SSL"] = "ON"
         tc.generate()
 
     def build(self):
@@ -137,11 +145,19 @@ class ResiprocateConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares", "resipmedia"]
+        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares", "resipmedia", "recon", "reflow"]
         if self.settings.os in ("Linux", "FreeBSD"):
             self.cpp_info.system_libs = ["pthread"]
 
         self.cpp_info.set_property("cmake_file_name", "resiprocate")
+
+        # Componente recon
+        self.cpp_info.components["reflow"].set_property("cmake_target_name", "reflow")
+        self.cpp_info.components["reflow"].libs = ["reflow"]
+
+        # Componente recon
+        self.cpp_info.components["recon"].set_property("cmake_target_name", "recon")
+        self.cpp_info.components["recon"].libs = ["recon"]
 
         # Componente rutil
         self.cpp_info.components["rutil"].set_property("cmake_target_name", "rutil")
@@ -168,4 +184,6 @@ class ResiprocateConan(ConanFile):
         self.requires("c-ares/1.19.1", transitive_headers=True)
         self.requires("libsrtp/2.4.2")
         self.requires("soxr/0.1.3")
+        self.requires("asio/1.28.1")
+        self.requires("boost/1.80.0")
         self.requires("popt/1.9.1@nerd4ever")

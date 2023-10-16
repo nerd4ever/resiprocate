@@ -26,12 +26,48 @@ if (ENABLE_TEST)
     enable_testing()
 endif ()
 
+function(version_libname)
+    if (SO_ABI)
+        set_target_properties(${ARGV0} PROPERTIES SOVERSION ${SO_ABI})
+    endif ()
+    # This logic tries to replicate the libtool -release X.Y ...
+    # but it doesn't create the same symlink that libtool creates.
+    # FIXME
+    # Other people have complained about the same problem, e.g.
+    # https://discourse.libsdl.org/t/patches-dynamic-library-name-should-it-be-libsdl2-2-0-so-or-libsdl2-so/19400/8
+    if (VERSIONED_SONAME)
+        set_target_properties(${ARGV0} PROPERTIES OUTPUT_NAME ${ARGV0}-${SO_RELEASE})
+        file(CREATE_LINK lib${ARGV0}-${SO_RELEASE}.so ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so RESULT ${ARGV0}-IGNORE SYMBOLIC)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${ARGV0}.so DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    endif ()
+endfunction()
+
+if (BUILD_RECON)
+    message(STATUS "=============== Build RECON ENABLED ================ ")
+else ()
+    message(STATUS "=============== Build RECON DISABLED =============== ")
+endif ()
+# RECON -----------------------------------------
+set(USE_SRTP TRUE)
+find_package(libsrtp REQUIRED)
+include_directories(${libsrtp_INCLUDE_DIRS})
+link_directories(${libsrtp_LIBRARY_DIRS})
+
+set(USE_ASIO TRUE)
+find_package(asio REQUIRED)
+include_directories(${asio_INCLUDE_DIRS})
+link_directories(${asio_LIBRARY_DIRS})
+
 # POPT ------------------------------------------
-if(USE_POPT)
-    find_package(popt REQUIRED)
-    set(HAVE_POPT_H true)
-    add_definitions(-DHAVE_POPT_H)
-endif()
+#set(USE_POPT TRUE)
+find_package(popt REQUIRED)
+include_directories(${popt_INCLUDE_DIRS})
+link_directories(${popt_LIBRARY_DIRS})
+
+# Boost -----------------------------------------
+find_package(Boost 1.80 REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARIES})
 
 # https://cmake.org/cmake/help/latest/module/FindThreads.html
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -157,7 +193,6 @@ if (BUILD_DSO_PLUGINS)
     set(INSTALL_REPRO_PLUGIN_DIR ${CMAKE_INSTALL_PKGLIBDIR}/repro/plugins)
 endif ()
 
-find_package(libsrtp REQUIRED)
 option_def(USE_LIBWEBRTC)
 option_def(RESIP_ASSERT_SYSLOG)
 
@@ -200,6 +235,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Used to group targets together when CMake generates projects for IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # Resiprocate Library rutil ----------------------------------------
 add_subdirectory(rutil)
 # Resiprocate Library resip ----------------------------------------
@@ -208,8 +244,8 @@ if (REGENERATE_MEDIA_SAMPLES)
     find_package(soxr REQUIRED)
 endif ()
 add_subdirectory(media)
-
-# add_subdirectory(apps)
+# Resiprocate Library reflow ----------------------------------------
+add_subdirectory(reflow)
 
 # Create spec file for RPM packaging
 # The tarball containing a spec file can be fed directly
