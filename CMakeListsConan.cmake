@@ -42,6 +42,12 @@ function(version_libname)
     endif ()
 endfunction()
 
+if (BUILD_RETURN)
+    message(STATUS "=============== Build RETURN ENABLED ================ ")
+else ()
+    message(STATUS "=============== Build RETURN DISABLED =============== ")
+endif ()
+
 if (BUILD_RECON)
     message(STATUS "=============== Build RECON ENABLED ================ ")
 else ()
@@ -184,6 +190,7 @@ set_def(USE_SSL)
 option_def(USE_IPV6)
 option_def(USE_DTLS)
 option_def(PEDANTIC_STACK)
+option_def(BUILD_RETURN)
 
 if (USE_MAXMIND_GEOIP)
     find_package(maxminddb REQUIRED)
@@ -247,6 +254,10 @@ if (REGENERATE_MEDIA_SAMPLES)
     find_package(soxr REQUIRED)
 endif ()
 add_subdirectory(media)
+# Resiprocate Library reTurn ----------------------------------------
+set(INSTALL_RETURN_PKGLIB_DIR ${CMAKE_INSTALL_PKGLIBDIR}/reTurnServer)
+add_subdirectory(reTurn)
+
 # Resiprocate Library reflow ----------------------------------------
 add_subdirectory(reflow)
 

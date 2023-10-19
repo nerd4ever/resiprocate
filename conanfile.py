@@ -70,7 +70,6 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": [True, False],
         "enable_dso_plugins": [True, False],
         "enable_test": [True, False],
-        "enable_recon": [True, False],
     }
 
     default_options = {
@@ -84,7 +83,6 @@ class ResiprocateConan(ConanFile):
         "pedantic_stack": False,
         "enable_dso_plugins": True,
         "enable_test": False,
-        "enable_recon": True,
     }
 
     exports_sources = (
@@ -130,8 +128,11 @@ class ResiprocateConan(ConanFile):
         # ENABLE_TEST ----------------------------------------------------
         tc.preprocessor_definitions["ENABLE_TEST"] = 1 if self.options.enable_test else 0
         # ENABLE_RECON ---------------------------------------------------
-        tc.variables["BUILD_RECON"] = "ON" if self.options.enable_recon else "OFF"
-        tc.preprocessor_definitions["BUILD_RECON"] = 1 if self.options.enable_recon else 0
+        tc.variables["BUILD_RECON"] = "ON"
+        tc.preprocessor_definitions["BUILD_RECON"] = 1
+        # ENABLE_RETURN --------------------------------------------------
+        tc.variables["BUILD_RETURN"] = "ON"
+        tc.preprocessor_definitions["BUILD_RETURN"] = 1
         # SSL ------------------------------------------------------------
         tc.variables["WITH_SSL"] = "ON"
         tc.generate()
@@ -146,37 +147,45 @@ class ResiprocateConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares", "resipmedia", "recon", "reflow"]
+        self.cpp_info.libs = ["resip", "rutil", "dum", "resipares", "resipmedia", "recon", "reflow", "reTurnClient", "reTurnCommon"]
         if self.settings.os in ("Linux", "FreeBSD"):
             self.cpp_info.system_libs = ["pthread"]
 
         self.cpp_info.set_property("cmake_file_name", "resiprocate")
 
-        # Componente reflow
+        # Component reTurnCommon
+        self.cpp_info.components["reTurnCommon"].set_property("cmake_target_name", "reTurnCommon")
+        self.cpp_info.components["reTurnCommon"].libs = ["reTurnCommon"]
+
+        # Component reTurnClient
+        self.cpp_info.components["reTurnClient"].set_property("cmake_target_name", "reTurnClient")
+        self.cpp_info.components["reTurnClient"].libs = ["reTurnClient"]
+
+        # Component reflow
         self.cpp_info.components["reflow"].set_property("cmake_target_name", "reflow")
         self.cpp_info.components["reflow"].libs = ["reflow"]
 
-        # Componente recon
+        # Component recon
         self.cpp_info.components["recon"].set_property("cmake_target_name", "recon")
         self.cpp_info.components["recon"].libs = ["recon"]
 
-        # Componente rutil
+        # Component rutil
         self.cpp_info.components["rutil"].set_property("cmake_target_name", "rutil")
         self.cpp_info.components["rutil"].libs = ["rutil"]
 
-        # Componente resipmedia
+        # Component resipmedia
         self.cpp_info.components["resipmedia"].set_property("cmake_target_name", "resipmedia")
         self.cpp_info.components["resipmedia"].libs = ["resipmedia"]
 
-        # Componente resip
+        # Component resip
         self.cpp_info.components["resip"].set_property("cmake_target_name", "resip")
         self.cpp_info.components["resip"].libs = ["resip"]
 
-        # Componente dum
+        # Component dum
         self.cpp_info.components["dum"].set_property("cmake_target_name", "dum")
         self.cpp_info.components["dum"].libs = ["dum"]
 
-        # Componente resipares
+        # Component resipares
         self.cpp_info.components["resipares"].set_property("cmake_target_name", "resipares")
         self.cpp_info.components["resipares"].libs = ["resipares"]
 
